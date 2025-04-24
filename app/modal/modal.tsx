@@ -1,60 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { Modal as RNModal, KeyboardAvoidingView, Platform } from 'react-native';
-import {
-    Wrapper,
-    Overlay,
-    Card,
-    Title,
-    InputWrapper,
-    StyledInput,
-    CloseButton,
-    AddButton,
-    AddButtonText,
-    Icon,
-} from '@/app/styles/modal.styles';
+import React, { useEffect, useState } from 'react';
+import { Modal as RNModal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Book } from '@/app/types/Book';
 
-const Modal = ({
-    visible,
-    setVisible,
-    setBooks,
-    editingBook,
-    setEditingBook,
-}) => {
-    const [author, setAuthor] = useState('');
-    const [title, setTitle] = useState('');
-    const [price, setPrice] = useState('');
+type Props = {
+    visible: boolean;
+    setVisible: (visible: boolean) => void;
+    setBooks: React.Dispatch<React.SetStateAction<Book[]>>;
+    editingBook: Book | null;
+    setEditingBook: (book: Book | null) => void;
+};
+
+const Modal: React.FC<Props> = ({ visible, setVisible, setBooks, editingBook, setEditingBook }) => {
+    const [book, setBook] = useState<Book>({
+        id: '',
+        title: '',
+        author: '',
+        price: '',
+    });
 
     useEffect(() => {
         if (editingBook) {
-            setAuthor(editingBook?.author ?? '');
-            setTitle(editingBook?.title ?? '');
-            setPrice(editingBook?.price ?? '');
+            setBook(editingBook);
         } else {
-            setAuthor('');
-            setTitle('');
-            setPrice('');
+            setBook({
+                id: Date.now().toString(),
+                title: '',
+                author: '',
+                price: '',
+            });
         }
     }, [editingBook]);
 
-    const handleSave = () => {
-        // Simulamos localStorage con AsyncStorage si quieres hacerlo persistente luego
-        const storedBooks = []; // Aquí iría una lectura de AsyncStorage, si fuera el caso
+    const handleChange = (field: keyof Book, value: string) => {
+        setBook({ ...book, [field]: value });
+    };
 
-        let updatedBooks;
-        if (editingBook) {
-            updatedBooks = storedBooks.map((b) =>
-                b.id === editingBook.id ? { ...editingBook, author, title, price } : b
-            );
-        } else {
-            const newBook = {
-                id: storedBooks.length + 1,
-                author,
-                title,
-                price,
-            };
-            updatedBooks = [...storedBooks, newBook];
-        }
+    const saveBook = async () => {
+        const storedBooks = await AsyncStorage.getItem('books');
+        const currentBooks = storedBooks ? JSON.parse(storedBooks) : [];
 
+        const updatedBooks = editingBook
+            ? currentBooks.map((b: Book) => (b.id === book.id ? book : b))
+            : [...currentBooks, book];
+
+        await AsyncStorage.setItem('books', JSON.stringify(updatedBooks));
         setBooks(updatedBooks);
         closeModal();
     };
@@ -65,57 +55,45 @@ const Modal = ({
     };
 
     return (
-        <RNModal visible={visible} animationType="fade" transparent onRequestClose={closeModal}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
-            >
-                <Wrapper>
-                    <Overlay onTouchStart={closeModal} />
-                    <Card>
-                        <CloseButton onPress={closeModal}>
-                            <Icon name="square-minus" />
-                        </CloseButton>
+        <RNModal visible={visible} animationType="slide" transparent>
+            <View style={styles.overlay}>
+                <View style={styles.modalContainer}>
+                    <Text style={styles.title}>{editingBook ? 'Editar Libro' : 'Añadir Libro'}</Text>
 
-                        <Title>{editingBook ? 'Editar Libro' : 'Añadir Nuevo Libro'}</Title>
+                    {['title', 'author', 'price'].map((field) => (
+                        <TextInput
+                            key={field}
+                            style={styles.input}
+                            placeholder={field.toUpperCase()}
+                            value={(book as any)[field]}
+                            onChangeText={(text) => handleChange(field as keyof Book, text)}
+                            keyboardType={field === 'year' || field === 'pages' || field === 'rating' ? 'numeric' : 'default'}
+                        />
+                    ))}
 
-                        <InputWrapper>
-                            <Icon name="person" />
-                            <StyledInput
-                                value={author}
-                                onChangeText={setAuthor}
-                                placeholder="Autor"
-                            />
-                        </InputWrapper>
-
-                        <InputWrapper>
-                            <Icon name="book" />
-                            <StyledInput
-                                value={title}
-                                onChangeText={setTitle}
-                                placeholder="Libro"
-                            />
-                        </InputWrapper>
-
-                        <InputWrapper>
-                            <Icon name="money-bill-wave" />
-                            <StyledInput
-                                value={price}
-                                onChangeText={setPrice}
-                                placeholder="Precio"
-                            />
-                        </InputWrapper>
-
-                        <AddButton onPress={handleSave}>
-                            <AddButtonText>
-                                {editingBook ? 'Guardar Cambios' : 'Añadir'}
-                            </AddButtonText>
-                        </AddButton>
-                    </Card>
-                </Wrapper>
-            </KeyboardAvoidingView>
+                    <View style={styles.buttons}>
+                        <TouchableOpacity style={styles.saveButton} onPress={saveBook}>
+                            <Text style={styles.buttonText}>Guardar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
+                            <Text style={styles.buttonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
         </RNModal>
     );
 };
+
+const styles = StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+    modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 16, width: '90%' },
+    title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
+    input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, marginBottom: 12 },
+    buttons: { flexDirection: 'row', justifyContent: 'space-between' },
+    saveButton: { backgroundColor: '#444', padding: 10, borderRadius: 8 },
+    cancelButton: { backgroundColor: '#999', padding: 10, borderRadius: 8 },
+    buttonText: { color: '#fff', fontWeight: '600' },
+});
 
 export default Modal;
