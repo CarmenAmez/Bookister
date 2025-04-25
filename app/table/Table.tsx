@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Book } from '@/app/types/Book';
 
@@ -14,18 +14,27 @@ type Props = {
 
 const Table: React.FC<Props> = ({ books, setBooks, setEditingBook, setVisible, onEdit  }) => {
     const deleteBook = (id: string) => {
-        Alert.alert('Eliminar', '¿Estás seguro de eliminar este libro?', [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-                text: 'Eliminar',
-                style: 'destructive',
-                onPress: async () => {
-                    const updatedBooks = books.filter((book) => book.id !== id);
-                    await AsyncStorage.setItem('books', JSON.stringify(updatedBooks));
-                    setBooks(updatedBooks);
+        if (Platform.OS === 'web') {
+            const confirm = window.confirm('¿Estás seguro de eliminar este libro?');
+            if (confirm) {
+                const updatedBooks = books.filter((book) => book.id !== id);
+                AsyncStorage.setItem('books', JSON.stringify(updatedBooks));
+                setBooks(updatedBooks);
+            }
+        } else {
+            Alert.alert('Eliminar', '¿Estás seguro de eliminar este libro?', [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const updatedBooks = books.filter((book) => book.id !== id);
+                        await AsyncStorage.setItem('books', JSON.stringify(updatedBooks));
+                        setBooks(updatedBooks);
+                    },
                 },
-            },
-        ]);
+            ]);
+        }
     };
 
     const editBook = (book: Book) => {

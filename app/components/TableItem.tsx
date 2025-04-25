@@ -1,14 +1,8 @@
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
-import { Row, Cell, Actions, IconButton } from './tableItemStyled';
-
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  price: number;
-}
+import { Row, Cell, Actions, IconButton } from '@/app/components/tableItemStyled';
+import { Book } from '@/app/types/Book';
 
 interface TableItemProps {
   book: Book;

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Button, Modal, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Book } from '@/app/types/Book';
-import Form from '../components/form/Form';
-import Table from '../table/Table';
+import Form from '@/app/components/form/Form';
+import Table from '@/app/table/Table';
 
 export default function HomeScreen() {
     const [books, setBooks] = useState<Book[]>([]);
@@ -34,10 +34,6 @@ export default function HomeScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>📚 Mi Biblioteca</Text>
-            <Button title="Agregar Libro" onPress={() => {
-                setEditingBook(null);
-                setVisible(true);
-            }} />
             <Table
                 books={books}
                 setBooks={setBooks}
@@ -45,14 +41,12 @@ export default function HomeScreen() {
                 setVisible={setVisible}
                 onEdit={handleSubmit}
             />
-            <Modal visible={visible} animationType="slide">
-                <Form visible={visible}
-                    setVisible={setVisible}
-                    setBooks={setBooks}
-                    editingBook={editingBook}
-                    setEditingBook={setEditingBook} onSubmit={handleSubmit} bookToEdit={editingBook || undefined} />
-                <Button title="Cancelar" color="gray" onPress={() => setVisible(false)} />
-            </Modal>
+            <Form visible={visible}
+                setVisible={setVisible}
+                setBooks={setBooks}
+                editingBook={editingBook}
+                setEditingBook={setEditingBook} 
+                />
         </View>
     );
 }

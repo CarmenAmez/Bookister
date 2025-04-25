@@ -31,12 +31,23 @@ export default function HomeScreen() {
     };
 
     const handleAdd = () => {
-        setEditingBook({});
-        setTimeout(() => {
-            setEditingBook(null);
-            setVisible(true);
-        }, 0);
+        setEditingBook(null);
+        setVisible(true);
     };
+
+    const handleSubmit = async (book: Book) => {
+        let updatedBooks;
+        if (editingBook) {
+            updatedBooks = books.map((b) => (b.id === book.id ? book : b));
+        } else {
+            updatedBooks = [...books, book];
+        }
+        await AsyncStorage.setItem('books', JSON.stringify(updatedBooks));
+        setBooks(updatedBooks);
+        setEditingBook(null);
+        setVisible(false);
+    };
+
 
     return (
         <View style={styles.container}>
@@ -51,6 +62,7 @@ export default function HomeScreen() {
                         setBooks={setBooks}
                         editingBook={editingBook}
                         setEditingBook={setEditingBook}
+                        onSubmit={handleSubmit} 
                     />
                     <Table books={books} onEdit={handleEdit} setBooks={setBooks}setEditingBook={setEditingBook} setVisible={setVisible}  />
                     <TouchableOpacity style={styles.addButton} onPress={handleAdd}>

@@ -19,7 +19,7 @@ interface Props {
     setBooks: (books: Book[]) => void;
     editingBook: Book | null;
     setEditingBook: (book: Book | null) => void;
-    onSubmit: (book: Book) => Promise<void>; 
+    onSubmit?: (book: Book) => Promise<void>; 
     bookToEdit?: Book;  
 }
 
