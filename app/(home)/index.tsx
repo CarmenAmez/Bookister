@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Table from '@/app/table/Table';
-import Form from '@/app/components/form/Form';
-import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo';
-import { Link } from 'expo-router';
-import { FontAwesome6 } from '@expo/vector-icons';
-import { SignOutButton } from '@/app/components/SignOutButton';
-import { Book } from '@/app/types/Book';
+import React, { useState, useEffect } from "react";
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+    SafeAreaView,
+} from "react-native";
+import { Pressable } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Table from "@/app/table/Table";
+import Form from "@/app/components/form/Form";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { Link } from "expo-router";
+import { FontAwesome6 } from "@expo/vector-icons";
+import { SignOutButton } from "@/app/components/SignOutButton";
+import { Book } from "@/app/types/Book";
 
 export default function HomeScreen() {
     const { user } = useUser();
@@ -17,7 +25,7 @@ export default function HomeScreen() {
 
     useEffect(() => {
         const fetchBooks = async () => {
-            const storedBooks = await AsyncStorage.getItem('books');
+            const storedBooks = await AsyncStorage.getItem("books");
             if (storedBooks) {
                 setBooks(JSON.parse(storedBooks));
             }
@@ -42,19 +50,19 @@ export default function HomeScreen() {
         } else {
             updatedBooks = [...books, book];
         }
-        await AsyncStorage.setItem('books', JSON.stringify(updatedBooks));
+        await AsyncStorage.setItem("books", JSON.stringify(updatedBooks));
         setBooks(updatedBooks);
         setEditingBook(null);
         setVisible(false);
     };
 
-
     return (
         <View style={styles.container}>
             <SignedIn>
-                <Text style={styles.welcome}>Hola, {user?.emailAddresses[0].emailAddress}</Text>
+                <Text style={styles.welcome}>
+                    Hola, {user?.emailAddresses[0].emailAddress}
+                </Text>
                 <SignOutButton />
-
                 <ScrollView contentContainerStyle={styles.content}>
                     <Form
                         visible={visible}
@@ -62,9 +70,15 @@ export default function HomeScreen() {
                         setBooks={setBooks}
                         editingBook={editingBook}
                         setEditingBook={setEditingBook}
-                        onSubmit={handleSubmit} 
+                        onSubmit={handleSubmit}
                     />
-                    <Table books={books} onEdit={handleEdit} setBooks={setBooks}setEditingBook={setEditingBook} setVisible={setVisible}  />
+                    <Table
+                        books={books}
+                        onEdit={handleEdit}
+                        setBooks={setBooks}
+                        setEditingBook={setEditingBook}
+                        setVisible={setVisible}
+                    />
                     <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
                         <FontAwesome6 name="plus" size={18} color="#fff" />
                         <Text style={styles.addText}>Añadir</Text>
@@ -73,10 +87,27 @@ export default function HomeScreen() {
             </SignedIn>
 
             <SignedOut>
-                <View style={styles.authContainer}>
-                    <Link href="/(auth)/sign-in"><Text style={styles.authLink}>Iniciar sesión</Text></Link>
-                    <Link href="/(auth)/sign-up"><Text style={styles.authLink}>Registrarse</Text></Link>
-                </View>
+                    <SafeAreaView style={styles.overlay}>
+                        
+                        <Text style={styles.title}>Bookister</Text>
+                        <Text style={styles.description}>
+                            Descubre, organiza y disfruta tus libros favoritos. Tu biblioteca
+                            personal en la palma de tu mano.
+                        </Text>
+
+                        <View style={styles.buttonContainer}>
+                            <Link href="/(auth)/sign-in" style={styles.button}>
+                                <Text style={styles.buttonText}>Iniciar sesión</Text>
+                            </Link>
+
+                            <Link
+                                href="/(auth)/sign-up"
+                                style={[styles.button, styles.registerButton]}
+                            >
+                                <Text style={styles.buttonText}>Registrarse</Text>
+                            </Link>
+                        </View>
+                    </SafeAreaView>
             </SignedOut>
         </View>
     );
@@ -84,14 +115,59 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16 },
-    welcome: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
+    welcome: { fontSize: 18, fontWeight: "600", marginBottom: 12 },
     content: { flexGrow: 1, gap: 20 },
     addButton: {
-        marginTop: 20, padding: 14, backgroundColor: '#444',
-        borderRadius: 12, flexDirection: 'row',
-        alignItems: 'center', justifyContent: 'center', gap: 10,
+        marginTop: 20,
+        padding: 14,
+        backgroundColor: "#444",
+        borderRadius: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
     },
-    addText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-    authContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    authLink: { fontSize: 18, marginVertical: 10, color: '#555' },
+    addText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    authContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+    authLink: { fontSize: 18, marginVertical: 10, color: "#555" },
+    overlay: {
+        flex: 1,
+        backgroundColor: "rgba(10, 10, 40, 0.6)",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+    },
+    title: {
+        fontSize: 40,
+        color: "#fff",
+        fontWeight: "bold",
+        marginBottom: 10,
+        textAlign: "center",
+    },
+    description: {
+        fontSize: 16,
+        color: "#ddd",
+        textAlign: "center",
+        marginBottom: 30,
+    },
+    buttonContainer: {
+        width: "100%",
+        alignItems: "center",
+    },
+    button: {
+        backgroundColor: "#6C63FF",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+        marginVertical: 10,
+        alignItems: "center",
+    },
+    registerButton: {
+        backgroundColor: "#4B3F72",
+    },
+    buttonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
 });
